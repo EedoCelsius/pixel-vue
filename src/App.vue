@@ -1,30 +1,43 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import { ref } from 'vue'
+import Stage from './components/Stage.vue'
+import LayerList from './components/LayerList.vue'
+
+const container = ref(null)
+const stageRatio = ref(2 / 3)
+const dragging = ref(false)
+
+function startDrag() {
+  dragging.value = true
+  window.addEventListener('mousemove', onDrag)
+  window.addEventListener('mouseup', stopDrag)
+}
+
+function onDrag(e) {
+  if (!dragging.value || !container.value) return
+  const rect = container.value.getBoundingClientRect()
+  const pos = e.clientX - rect.left
+  stageRatio.value = Math.min(0.9, Math.max(0.1, pos / rect.width))
+}
+
+function stopDrag() {
+  dragging.value = false
+  window.removeEventListener('mousemove', onDrag)
+  window.removeEventListener('mouseup', stopDrag)
+}
 </script>
 
 <template>
-  <div class="p-8 text-center">
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+  <div ref="container" class="flex h-screen w-screen overflow-hidden">
+    <div class="h-full" :style="{ width: stageRatio * 100 + '%' }">
+      <Stage />
+    </div>
+    <div
+      class="w-1 bg-gray-300 cursor-col-resize"
+      @mousedown="startDrag"
+    ></div>
+    <div class="h-full" :style="{ width: (1 - stageRatio) * 100 + '%' }">
+      <LayerList />
+    </div>
   </div>
-  <HelloWorld msg="Vite + Vue + Pinia + Tailwind" />
 </template>
-
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
-}
-</style>
